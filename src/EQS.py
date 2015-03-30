@@ -5,21 +5,33 @@
 #Created Date = 29 March 2015
 '''
 
+# imports
+import SocketServer
+import time
+
+
+# EQS module variables
+
 # state of the EQS
+# -1 -> Pre-Startup
+# -1 -> 0 : Sucesfull init of the module
 # 0 -> Startup server and wait for incomming connection
 # 0 -> 1 : Valid binding to HOST / PORT, incoming TCP connection on host / port
 # 1 -> Waiting for valid logon
 # 1 >- 2 : Valid logon received
 # 2 -> Awaiting commands
 # 2 -> 3: txmode
+state_EQS = -1
 
-global state_EQS
-global status_BITE
+# status BITE for the EQS
+status_BITE = 0
 
-import SocketServer
-import time
-
+# Version of this EQS
 __EQS__VERSION__ = '1.00T01'
+
+# Process variable to hold created pifm process
+fm_process = None
+
 
 class MyTCPHandler(SocketServer.StreamRequestHandler):
     """
@@ -30,6 +42,9 @@ class MyTCPHandler(SocketServer.StreamRequestHandler):
     client.
     """
 
+    # Dictionary that holds all valid commands for the EQS
+    # TODO: Reasearch better method of making the commands
+    #       getters and setters much more dynamic
     supported_commands = ["<help>Returns a list of supported commands",
                           "<version>Returns version number of EQS", 
                           "<upper>returns the received string to the\
@@ -58,10 +73,8 @@ class MyTCPHandler(SocketServer.StreamRequestHandler):
             output = ""
 
             output += ("[help]%s\n" % "list of supported commands")
-            
             for cmmnd in self.supported_commands:
                 output += ("%s\n" % cmmnd)
-            
             self.wfile.write(output)
 
 # hostname to where server must bind listening socket. 127.0.0.1 or localhost
@@ -70,13 +83,22 @@ HOST_NAME = 'localhost'
 PORT_NUMBER = 9995
 
 if __name__ == "__main__":
-    # TODO: Insert commandline parser, example input args EQS.py -host localhost -port 9999 -EQSuptime 30
+    # TODO: Insert commandline parser, example input args EQS.py -host localhos
+    #                                                -port 9999 -EQSuptime 30
+
+    #change state to 0, sucessfull module init
+    state_EQS = 0
+
     # Create the server, binding to localhost on port 9999
     server = SocketServer.TCPServer((HOST_NAME, PORT_NUMBER), MyTCPHandler)
+
+    #change state to 1, successfull binding of listening server socket
+    state_EQS = 1
 
     # set Server timeout to 10seconds, ignored by server.server_forever()
     server.timeout = 10
 
+    # get current system time
     starttime = time.time()
 
     EQS_timeout = 0.5 * 60
@@ -85,7 +107,7 @@ if __name__ == "__main__":
     # interrupt the program with Ctrl-C
     print time.asctime(), "Server Starts - %s:%s" % (HOST_NAME, PORT_NUMBER)
     try:
-        # server TCP requests handled for x minutes then closes server, 
+        # server TCP requests handled for x minutes then closes server
         # or when keyboard interrupt is received
         while time.time() - starttime < (0.5*60):
             # waits for one request to come in. handles ONLY one request
@@ -95,5 +117,4 @@ if __name__ == "__main__":
         print "Server received KeyboardInterrupt."
         pass
     server.server_close()
-    print time.asctime(), "Server Stops - %s:%s" % (HOST_NAME, PORT_NUMBER)        
-    
+    print time.asctime(), "Server Stops - %s:%s" % (HOST_NAME, PORT_NUMBER)
