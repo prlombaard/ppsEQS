@@ -5,6 +5,7 @@
 '''
 import logging
 import time
+import EQSServer
 
 
 class EQSApp(object):
@@ -47,10 +48,12 @@ class EQSApp(object):
         logging.info("Application starts - %s" % time.asctime())
 
         # get current system time
-        starttime = time.time()
+        self.appstarttime = time.time()
 
         try:
-            while (time.time() - starttime) < (self.get_watchdog_timeout()):
+            while (time.time() - self.appstarttime) < (self.get_watchdog_timeout()):
+                # Create EQSServer instance
+                self.eqsserver = EQSServer.EQSServer()
                 pass
         except KeyboardInterrupt:
             print "Application received KeyboardInterrupt."
