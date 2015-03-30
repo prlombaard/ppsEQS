@@ -5,32 +5,10 @@
 #Created Date = 29 March 2015
 '''
 
-# imports
+# module imports
 import SocketServer
 import time
-
-
-# EQS module variables
-
-# state of the EQS
-# -1 -> Pre-Startup
-# -1 -> 0 : Sucesfull init of the module
-# 0 -> Startup server and wait for incomming connection
-# 0 -> 1 : Valid binding to HOST / PORT, incoming TCP connection on host / port
-# 1 -> Waiting for valid logon
-# 1 >- 2 : Valid logon received
-# 2 -> Awaiting commands
-# 2 -> 3: txmode
-state_EQS = -1
-
-# status BITE for the EQS
-status_BITE = 0
-
-# Version of this EQS
-__EQS__VERSION__ = '1.00T01'
-
-# Process variable to hold created pifm process
-fm_process = None
+import string
 
 
 class MyTCPHandler(SocketServer.StreamRequestHandler):
@@ -60,9 +38,47 @@ class MyTCPHandler(SocketServer.StreamRequestHandler):
         self.data = self.rfile.readline().strip()
         print "{} wrote:".format(self.client_address[0])
         print self.data
-        # Likewise, self.wfile is a file-like object used to write back
-        # to the client
+        # Likewise, self.wfile is a file-like object used to write back to the client
         # TODO:make received data all lower case before testing
+
+        global state_EQS
+
+        print "state_EQS = [%d]" % state_EQS
+
+        # test what state EQS is in
+        # test if EQS is in waiting valid loging request state
+        if (state_EQS == 1):
+            # awaiting login request in the form <username>admin<password>password
+            # test if username and password is in received string
+            if ("<username>" in self.data) and ("<password>" in self.data):
+                # username and password tags received
+
+                # Extract username from received string
+                usr = self.data[string.find(self.data, ">") + 1:string.rfind(self.data,"<")]
+
+                # Extract password from received string
+                passwd = self.data[string.rfind(self.data, ">") + 1:]
+
+                # TODO: Add debug info
+                print ("Username: [%s]" % usr)
+                print ("Password: [%s]" % passwd)
+
+                # TODO: Update method for retrieving credentials safely, NOT using text openly
+                # Test if username and password maches
+                if (usr == username) and (passwd == password):
+                    # Change state to 2, username and password matches, i.e. valid loging request received
+                    state_EQS = 2
+
+                    print "state_EQS = [%d]" % state_EQS
+
+                    # TODO: update the reponse messages to be read from conf, instead of hardcoded
+                    # Send success response back to requestor
+                    self.wfile.write("[login][successfull]\n")
+                else:
+                    # TODO: update the reponse messages to be read from conf, instead of hardcoded
+                    # Send failed response back to requestor
+                    self.wfile.write("[login][failed]\n")
+
         if ("<upper>" in self.data):
             self.wfile.write(self.data.upper()[7:])
         if ("<lower>" in self.data):
@@ -77,16 +93,42 @@ class MyTCPHandler(SocketServer.StreamRequestHandler):
                 output += ("%s\n" % cmmnd)
             self.wfile.write(output)
 
-# hostname to where server must bind listening socket. 127.0.0.1 or localhost
-HOST_NAME = 'localhost'
-# Port number to bind listening server socket to
-PORT_NUMBER = 9995
-
 if __name__ == "__main__":
-    # TODO: Insert commandline parser, example input args EQS.py -host localhos
-    #                                                -port 9999 -EQSuptime 30
+    # TODO: Insert commandline parser, example input args EQS.py -host localhost -port 9999 -EQSuptime 30
 
-    #change state to 0, sucessfull module init
+    # EQS module variables
+    # Version of this EQS
+    __EQS__VERSION__ = '1.00T01'
+
+    # hostname to where server must bind listening socket. 127.0.0.1 or localhost
+    HOST_NAME = 'localhost'
+    # Port number to bind listening server socket to
+    PORT_NUMBER = 9995
+
+
+    # state of the EQS
+    # -1 -> Pre-Startup
+    # -1 -> 0 : Sucesfull init of the module
+    # 0 -> Startup server and wait for incomming connection
+    # 0 -> 1 : Valid binding to HOST / PORT, incoming TCP connection on host / port
+    # 1 -> Awaiting valid logon request <username>username<password>password
+    # 1 >- 2 : Valid logon received
+    # 2 -> Awaiting commands
+    # 2 -> 3: txmode
+    state_EQS = -1
+
+    # status BITE for the EQS
+    status_BITE = 0
+
+    # Process variable to hold created pifm process
+    fm_process = None
+
+    # user details
+    # TODO: save the credentials using hash algorithms, NOT as clear test
+    username = "root"
+    password = "password"
+
+    # change state to 0, sucessfull module init
     state_EQS = 0
 
     # Create the server, binding to localhost on port 9999

@@ -5,7 +5,8 @@ HOST, PORT = "localhost", 9995
 if len(sys.argv[1:])>0:
 	data = " ".join(sys.argv[1:])
 else:
-	data = "<help>HELLO world, this is me"
+	#data = "<help>HELLO world, this is me"
+	data = "<username>root<password>password"
 
 # Create a socket (SOCK_STREAM means a TCP socket)
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
