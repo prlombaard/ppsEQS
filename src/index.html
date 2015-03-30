@@ -1,0 +1,31 @@
+<form method="post"
+      enctype="application/x-www-form-urlencoded"
+      action="/cgi-bin/test_transmit.py">
+	  
+ <fieldset>
+  <legend> Mode </legend>
+  <p><label> <input type=radio name=mode required value="fixed freq"> Fixed Frequency </label></p>
+  <p><label> <input type=radio name=mode required value="sweep freq"> Sweep Frequency </label></p>
+  <p><label> <input type=radio name=mode required value="freq hop">   Hop Frequency </label></p>
+ </fieldset>
+	  
+	  
+ <h1>Fixed Frequency</h1>
+ <p><label>Fstart(Hz) <input name="fixedstart" minlength=6 value=1000000 required></label></p>
+ <p><label>Fstop(Hz)  <input name="fixedstop"  value=1200000 required></label></p>
+ <p><label>Delay(ms)  <input name="hopdelay" value=200     required></label></p>
+
+ <h1>Sweep Frequency</h1>
+ <p><label>Fstart <input name="sweepstart" value=1000000  required></label></p>
+ <p><label>Fstop <input name="sweepstop"   value=1200000 required></label></p>
+ 
+ <fieldset>
+  <legend> CGI Debug Mode</legend>
+  <p><label> <input type=radio name=logging_mode required value="logging append" > Logging  on : append log </label></p>
+  <p><label> <input type=radio name=logging_mode required value="logging rewrite"> Logging  on : rewrite log </label></p>
+  <p><label> <input type=radio name=logging_mode required value="logging off">     Logging     : off </label></p>
+ </fieldset>
+
+ 
+ <p><button>Submit</button></p>
+</form>
