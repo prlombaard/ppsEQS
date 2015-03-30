@@ -64,6 +64,7 @@ class MyTCPHandler(SocketServer.StreamRequestHandler):
         print self.data
         # Likewise, self.wfile is a file-like object used to write back
         # to the client
+        # TODO:make received data all lower case before testing
         if ("<upper>" in self.data):
             self.wfile.write(self.data.upper()[7:])
         if ("<lower>" in self.data):
@@ -80,15 +81,13 @@ class MyTCPHandler(SocketServer.StreamRequestHandler):
             
             self.wfile.write(output)
 
-
-
-        
-HOST_NAME = 'localhost' # !!!REMEMBER TO CHANGE THIS!!!
-PORT_NUMBER = 9995 # Maybe set this to 9000.
+# hostname to where server must bind listening socket. 127.0.0.1 or localhost
+HOST_NAME = 'localhost'
+# Port number to bind listening server socket to
+PORT_NUMBER = 9995
 
 if __name__ == "__main__":
-    # HOST, PORT = "localhost", 9999
-
+    # TODO: Insert commandline parser, example input args EQS.py -host localhost -port 9999 -EQSuptime 30
     # Create the server, binding to localhost on port 9999
     server = SocketServer.TCPServer((HOST_NAME, PORT_NUMBER), MyTCPHandler)
 
@@ -96,6 +95,8 @@ if __name__ == "__main__":
     server.timeout = 10
 
     starttime = time.time()
+
+    EQS_timeout = 0.5 * 60
 
     # Activate the server; this will keep running until you
     # interrupt the program with Ctrl-C
@@ -106,7 +107,9 @@ if __name__ == "__main__":
         # or when keyboard interrupt is received
         while time.time() - starttime < (0.5*60):
             server.handle_request()
+        print "Server timed out after %d seconds" % (EQS_timeout)
     except KeyboardInterrupt:
+        print "Server received KeyboardInterrupt."
         pass
     server.server_close()
     print time.asctime(), "Server Stops - %s:%s" % (HOST_NAME, PORT_NUMBER)        
