@@ -21,23 +21,6 @@ import time
 
 __EQS__VERSION__ = '1.00T01'
 
-#class MyTCPBaseRequestHandler(SocketServer.BaseRequestHandler):
-    # """
-    # The RequestHandler class for our server.
-
-    # It is instantiated once per connection to the server, and must
-    # override the handle() method to implement communication to the
-    # client.
-    # """
-
-    # def handle(self):
-    #     # self.request is the TCP socket connected to the client
-    #     self.data = self.request.recv(1024).strip()
-    #     print "{} wrote:".format(self.client_address[0])
-    #     print self.data
-    #     # just send back the same data, but upper-cased
-    #     self.request.sendall(self.data.upper())
-
 class MyTCPHandler(SocketServer.StreamRequestHandler):
     """
     The RequestHandler class for our server.
@@ -102,10 +85,10 @@ if __name__ == "__main__":
     # interrupt the program with Ctrl-C
     print time.asctime(), "Server Starts - %s:%s" % (HOST_NAME, PORT_NUMBER)
     try:
-        # server.serve_forever()
-        # server requests for x minutes then close server, 
+        # server TCP requests handled for x minutes then closes server, 
         # or when keyboard interrupt is received
         while time.time() - starttime < (0.5*60):
+            # waits for one request to come in. handles ONLY one request
             server.handle_request()
         print "Server timed out after %d seconds" % (EQS_timeout)
     except KeyboardInterrupt:
