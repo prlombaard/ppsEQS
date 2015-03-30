@@ -9,7 +9,16 @@
 import SocketServer
 import time
 import string
+from random import randint
 
+def logout():
+    global state_EQS
+
+    print "state_EQS = [%d]" % state_EQS
+    print "logging out"
+    # Change state to 1, awaiting login request
+    state_EQS = 1
+    print "state_EQS = [%d]" % state_EQS    
 
 class MyTCPHandler(SocketServer.StreamRequestHandler):
     """
@@ -19,6 +28,10 @@ class MyTCPHandler(SocketServer.StreamRequestHandler):
     override the handle() method to implement communication to the
     client.
     """
+
+    magic_number = 1234
+
+    sessioncnt = 0
 
     # Dictionary that holds all valid commands for the EQS
     # TODO: Reasearch better method of making the commands
@@ -40,10 +53,11 @@ class MyTCPHandler(SocketServer.StreamRequestHandler):
         print self.data
         # Likewise, self.wfile is a file-like object used to write back to the client
         # TODO:make received data all lower case before testing
-
         global state_EQS
 
         print "state_EQS = [%d]" % state_EQS
+
+        print "Magic Number[%d]" % magic_number
 
         # test what state EQS is in
         # test if EQS is in waiting valid loging request state
@@ -71,6 +85,15 @@ class MyTCPHandler(SocketServer.StreamRequestHandler):
 
                     print "state_EQS = [%d]" % state_EQS
 
+                    self.sessioncnt += 1
+
+                    print "Session Count = [%d]" % self.sessioncnt
+
+                    # TODO: choose better way of creating a magic number
+                    self.magic_number = randint(0, 9999)
+
+                    print "Magic Number = [%d]" % self.magic_number
+
                     # TODO: update the reponse messages to be read from conf, instead of hardcoded
                     # Send success response back to requestor
                     self.wfile.write("[login][successfull]\n")
@@ -78,20 +101,26 @@ class MyTCPHandler(SocketServer.StreamRequestHandler):
                     # TODO: update the reponse messages to be read from conf, instead of hardcoded
                     # Send failed response back to requestor
                     self.wfile.write("[login][failed]\n")
+        # test if EQS is waiting for commands state
+        elif (state_EQS == 2):
+            # awaiting commands from requestors
+            if ("<upper>" in self.data):
+                self.wfile.write(self.data.upper()[7:])
+            if ("<lower>" in self.data):
+                self.wfile.write(self.data.lower()[7:])
+            if ("<version>" in self.data):
+                self.wfile.write("[version][%s]" % __EQS__VERSION__)
+            if ("<help>" in self.data):
+                output = ""
 
-        if ("<upper>" in self.data):
-            self.wfile.write(self.data.upper()[7:])
-        if ("<lower>" in self.data):
-            self.wfile.write(self.data.lower()[7:])
-        if ("<version>" in self.data):
-            self.wfile.write("[version][%s]\ndjambo" % __EQS__VERSION__)
-        if ("<help>" in self.data):
-            output = ""
-
-            output += ("[help]%s\n" % "list of supported commands")
-            for cmmnd in self.supported_commands:
-                output += ("%s\n" % cmmnd)
-            self.wfile.write(output)
+                output += ("[help]%s\n" % "list of supported commands")
+                for cmmnd in self.supported_commands:
+                    output += ("%s\n" % cmmnd)
+                self.wfile.write(output)
+            if ("logout" in self.data):
+                # Logout the current session
+                logout()
+                self.wfile.write("[logout][%s]\n" % "successfull")
 
 if __name__ == "__main__":
     # TODO: Insert commandline parser, example input args EQS.py -host localhost -port 9999 -EQSuptime 30
